@@ -1,7 +1,7 @@
 # JustTeams
 
 <p align="center">
-<img src="https://i.imgur.com/ouwxPhh.png" alt="JustTeams Logo" width="1000"/>
+<img src="https://i.imgur.com/5pLvtnY.png" alt="JustTeams Logo" width="1000"/>
 </p>
 
 <p align="center">
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-2.3.3-brightgreen?style=for-the-badge" alt="Version" />
+<img src="https://img.shields.io/badge/Version-2.3.6-brightgreen?style=for-the-badge" alt="Version" />
 <img src="https://img.shields.io/badge/API-1.21+-blue?style=for-the-badge" alt="API Version" />
 <img src="https://img.shields.io/badge/Java-21+-orange?style=for-the-badge" alt="Java" />
 <img src="https://img.shields.io/badge/Folia-Supported-purple?style=for-the-badge" alt="Folia" />
@@ -35,11 +35,13 @@ JustTeams is a feature-rich team management plugin designed for modern Minecraft
 - **Comprehensive Admin Tools** - Full-featured admin GUI with permission editing
 - **Team Management** - Create, invite, promote, demote, kick, and transfer teams
 - **Team Features** - Home system, warps, PvP toggle, team chat, shared ender chest
+- **Admin Chat Spy** - Monitor all team chats with permission-based access
 - **Economy Integration** - Vault support with team bank system
 - **Rich Visuals** - MiniMessage formatting with gradients and custom colors
+- **Customizable GUIs** - Dummy items support for enhanced visual customization
 - **Permission System** - Role-based permissions (Owner, Admin, Moderator, Member)
 - **Hook Support** - Vault, PlaceholderAPI, PvPManager (all optional)
-- **Folia Ready** - Full support for multi-threaded region servers---
+- **Folia Ready** - Full support for multi-threaded region servers with optimized scheduler---
 
 ## Installation
 
@@ -158,6 +160,7 @@ For network-wide team synchronization with instant updates:
 |---------|-------------|------------|---------|
 | `/team reload` | Reload all configurations | `justteams.command.reload` | OP |
 | `/team admin` | Open admin panel GUI | `justteams.command.admin` | OP |
+| `/team chatspy` | Toggle chat spy (monitor all team chats) | `justteams.chatspy` | OP |
 
 ### Command Aliases
 
@@ -278,7 +281,7 @@ features:
   
   # Information Features
   team_info: true
-  team_tag: true
+  team_tag: true            # Set to false to disable team tags entirely
   team_description: true
   team_leaderboard: true
   
@@ -496,6 +499,40 @@ All admin actions are instantly synchronized across your network:
 - **With Redis:** <100ms (measured in production)
 - **MySQL Only:** ~1 second (polling interval)
 
+### GUI Customization with Dummy Items
+
+JustTeams allows you to add decorative items to any GUI for enhanced visual customization.
+
+**Configuration (gui.yml):**
+```yaml
+dummy-items:
+  decoration-diamond:
+    material: DIAMOND
+    display-name: "<gradient:#00FFFF:#0080FF>✦ Premium Team ✦</gradient>"
+    lore:
+      - "<gray>Exclusive decoration"
+    slots: [10, 16]
+    custom-model-data: 1001
+    enchanted: true
+  
+  corner-skulls:
+    material: PLAYER_HEAD
+    display-name: "<gold>★</gold>"
+    slots: [0, 8, 45, 53]
+```
+
+**Features:**
+- Place items in single or multiple slots
+- Custom model data support for resource packs
+- Enchantment glow effect
+- MiniMessage formatting for display names and lore
+- Fully configurable per GUI
+
+**Static Utility Method:**
+```java
+GUIManager.loadDummyItems(inventory, configSection)
+```
+
 ---
 ## Team Features
 
@@ -605,13 +642,9 @@ enderchest:
 
 **Storage:** 54 slots (6 rows) per team, saved to database
 
-**Cross-Server Support:** ✅ Ender chest contents sync across network
-
----
-
 ### Team Chat System
 
-Dedicated team communication with multiple input methods.
+Dedicated team communication with multiple input methods and admin monitoring.
 
 **Methods:**
 1. **Toggle Mode:** `/team chat` - All messages go to team
@@ -635,7 +668,20 @@ team_chat:
 - Toggle mode persists across sessions
 - Customizable chat format per server
 - Automatic profanity filter (configurable blacklist)
+- **Admin Chat Spy** - Monitor all team chats with permission
 
+**Commands:**
+- `/team chat` - Toggle team chat mode
+- `/team chatspy` or `/team spy` - Toggle admin chat spy (requires `justteams.chatspy`)
+- `/teammsg <message>` - Send team message (aliases: /tm, /tmsg)
+- `/guildmsg`, `/clanmsg`, `/partymsg` - Alternative aliases
+
+**Admin Chat Spy:**
+- **Permission:** `justteams.chatspy` (default: OP)
+- **Usage:** `/team chatspy` to toggle spy mode
+- **Format:** `[SPY] [TeamName] PlayerName: message` (gray/red/white formatting)
+- **Behavior:** See all team chat messages from teams you're not in
+- **Privacy:** Players are not notified when being monitored
 **Commands:**
 - `/team chat` - Toggle team chat mode
 - `/teammsg <message>` - Send team message (aliases: /tm, /tmsg)
@@ -1140,6 +1186,7 @@ Console will show:
 | `justteams.command.requests` | View join requests | Everyone |
 | `justteams.command.reload` | Reload configs | OP |
 | `justteams.command.admin` | Access admin GUI | OP |
+| `justteams.chatspy` | Monitor all team chats | OP |
 
 ### Bypass Permissions
 
@@ -1172,20 +1219,26 @@ justteams.admin:          # Admin access
 
 **Requirement**: Install [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) to use these placeholders.
 
-All placeholders support per-player context and update in real-time across servers.
+All placeholders support per-player context and update in real-time across servers. **Note:** Most placeholders support both short and long versions (e.g., `%justteams_tag%` and `%justteams_team_tag%`).
 
 ### Team Information Placeholders
 
-| Placeholder | Description | Example Output |
-|------------|-------------|----------------|
-| `%justteams_team_name%` | Player's team name | `The Builders` |
-| `%justteams_team_tag%` | Player's team tag | `[BUILD]` |
-| `%justteams_team_owner%` | Team owner name | `kotori` |
-| `%justteams_team_members%` | Member count | `5` |
-| `%justteams_team_max_members%` | Max member limit | `10` |
-| `%justteams_has_team%` | Boolean team check | `true` or `false` |
-| `%justteams_team_id%` | Internal team ID | `12345-67890` |
-| `%justteams_team_description%` | Team description | `We build awesome stuff!` |
+| Placeholder | Aliases | Description | Example Output |
+|------------|---------|-------------|----------------|
+| `%justteams_name%` | `%justteams_team_name%` | Player's team name | `The Builders` |
+| `%justteams_tag%` | `%justteams_team_tag%` | Player's team tag | `BUILD` |
+| `%justteams_color_name%` | - | Team name with color codes | `<#4C9DDE>The Builders</#4C9DDE>` |
+| `%justteams_color_tag%` | - | Team tag with color codes | `<#FFD700>BUILD</#FFD700>` |
+| `%justteams_plain_name%` | - | Team name without any formatting | `The Builders` |
+| `%justteams_plain_tag%` | - | Team tag without any formatting | `BUILD` |
+| `%justteams_owner%` | `%justteams_team_owner%` | Team owner name | `kotori` |
+| `%justteams_member_count%` | `%justteams_team_members%`, `%justteams_team_size%` | Member count | `5` |
+| `%justteams_max_members%` | `%justteams_team_max_members%`, `%justteams_team_capacity%` | Max member limit | `10` |
+| `%justteams_members_online%` | - | Online member count | `3` |
+| `%justteams_has_team%` | - | Boolean team check | `true` or `false` |
+| `%justteams_team_id%` | - | Internal team ID | `12345` |
+| `%justteams_description%` | `%justteams_team_description%` | Team description | `We build awesome stuff!` |
+| `%justteams_display%` | - | Formatted team display (configurable in placeholders.yml) | `<#4C9DDE>⚔ [BUILD]</#4C9DDE>` |
 
 ### Team Status Placeholders
 
@@ -1195,30 +1248,35 @@ All placeholders support per-player context and update in real-time across serve
 | `%justteams_team_pvp%` | PvP enabled status | `Enabled` or `Disabled` |
 | `%justteams_is_public%` | Boolean public check | `true` or `false` |
 | `%justteams_pvp_enabled%` | Boolean PvP check | `true` or `false` |
+| `%justteams_team_full%` | Boolean full team check | `true` or `false` |
 
 ### Member Role Placeholders
 
 | Placeholder | Description | Example Output |
 |------------|-------------|----------------|
-| `%justteams_role%` | Player's role in team | `Owner`, `Admin`, `Moderator`, `Member` |
-| `%justteams_role_level%` | Numeric role level | `4` (Owner), `3` (Admin), `2` (Mod), `1` (Member) |
+| `%justteams_role%` | Player's role in team | `OWNER`, `CO_OWNER`, `MEMBER` |
+| `%justteams_role_level%` | Numeric role level | `4` (Owner), `3` (Co-Owner), `1` (Member) |
 | `%justteams_is_owner%` | Boolean owner check | `true` or `false` |
-| `%justteams_is_admin%` | Boolean admin check | `true` or `false` |
+| `%justteams_is_admin%` | Boolean admin check (Owner or Co-Owner) | `true` or `false` |
+| `%justteams_is_co_owner%` | Boolean co-owner check | `true` or `false` |
+| `%justteams_is_member%` | Boolean member check | `true` or `false` |
+| `%justteams_join_date%` | Date player joined team | `03 Nov 2025` |
 
 ### Team Economy Placeholders
 
 | Placeholder | Description | Example Output |
 |------------|-------------|----------------|
-| `%justteams_bank_balance%` | Team bank balance | `5000.50` |
-| `%justteams_bank_formatted%` | Formatted balance | `$5,000.50` |
+| `%justteams_bank_balance%` | Team bank balance (formatted) | `5,000.50` |
+| `%justteams_bank_formatted%` | Formatted balance with currency | `$5,000.50` |
+| `%justteams_bank_balance_raw%` | Raw numeric balance (for ajLeaderboards) | `5000.50` |
 
 ### Team Statistics Placeholders
 
-| Placeholder | Description | Example Output |
-|------------|-------------|----------------|
-| `%justteams_kills%` | Team total kills | `150` |
-| `%justteams_deaths%` | Team total deaths | `50` |
-| `%justteams_kd%` | Team K/D ratio | `3.00` |
+| Placeholder | Aliases | Description | Example Output |
+|------------|---------|-------------|----------------|
+| `%justteams_kills%` | - | Team total kills | `150` |
+| `%justteams_deaths%` | - | Team total deaths | `50` |
+| `%justteams_kd%` | `%justteams_kdr%` | Team K/D ratio | `3.00` |
 
 ### Team Home & Warp Placeholders
 
@@ -1229,26 +1287,65 @@ All placeholders support per-player context and update in real-time across serve
 | `%justteams_warp_count%` | Number of warps | `3` |
 | `%justteams_max_warps%` | Max warp limit | `5` |
 
+### Special Placeholders
+
+| Placeholder | Description | Example Output |
+|------------|-------------|----------------|
+| `%justteams_created_at%` | Team creation date | `Unknown` (placeholder) |
+
 ### Usage Examples
+
+**Testing Placeholders:**
+```
+/papi parse me %justteams_tag%
+/papi parse me %justteams_name%
+/papi parse me %justteams_display%
+/papi bcparse me %justteams_role%
+```
 
 **Scoreboard Integration (with DeluxeMenus, FeatherBoard, etc.):**
 ```yaml
-- "Team: <gradient:#4C9DDE:#FFD700>%justteams_team_tag%</gradient>"
-- "Members: %justteams_team_members%/%justteams_team_max_members%"
+- "Team: <gradient:#4C9DDE:#FFD700>%justteams_tag%</gradient>"
+- "Members: %justteams_member_count%/%justteams_max_members% (%justteams_members_online% online)"
 - "Role: %justteams_role%"
-- "Balance: $%justteams_bank_formatted%"
+- "Balance: %justteams_bank_formatted%"
 - "K/D: %justteams_kd%"
 ```
 
-**Chat Format Integration:**
+**Chat Format Integration (with ChatManager, EssentialsChat, etc.):**
 ```yaml
-format: "%justteams_team_tag% %player_name%: %message%"
+# Show team tag before player name
+format: "%justteams_display% %player_name%: %message%"
+
+# Alternative: Show team tag in brackets
+format: "[%justteams_tag%] %player_name%: %message%"
 ```
 
-**Tab List Integration:**
+**Tab List Integration (with TAB, NametagEdit, etc.):**
 ```yaml
-prefix: "%justteams_team_tag% "
+# Show team tag as prefix
+prefix: "%justteams_display% "
+
+# Show role as suffix
 suffix: " [%justteams_role%]"
+
+# Combined example
+prefix: "[%justteams_tag%] "
+suffix: " (%justteams_role_level%)"
+```
+
+**DeluxeMenus Example:**
+```yaml
+item:
+  material: PLAYER_HEAD
+  name: "<gold>%justteams_name%</gold>"
+  lore:
+    - "<gray>Tag: <white>%justteams_tag%</white></gray>"
+    - "<gray>Owner: <white>%justteams_owner%</white></gray>"
+    - "<gray>Members: <white>%justteams_member_count%/%justteams_max_members%</white></gray>"
+    - "<gray>Balance: <green>%justteams_bank_formatted%</green></gray>"
+    - ""
+    - "<gray>Your Role: <yellow>%justteams_role%</yellow></gray>"
 ```
 
 ---
@@ -1637,7 +1734,7 @@ If you encounter issues not covered here:
 
 | Component | Details |
 |-----------|---------|
-| **Plugin Version** | 2.3.3 |
+| **Plugin Version** | 2.3.6 |
 | **Minecraft Version** | 1.21+ |
 | **Server Software** | Paper, Folia, Spigot, Purpur |
 | **Java Version** | 21+ required |
@@ -1647,6 +1744,8 @@ If you encounter issues not covered here:
 | **Dependencies** | Vault, PlaceholderAPI, PvPManager (all optional) |
 | **License** | CC BY-NC-SA 4.0 |
 | **Author** | kotori |
+
+### Feature Matrix
 
 ### Feature Matrix
 
@@ -1660,12 +1759,15 @@ If you encounter issues not covered here:
 | Team Bank | ✅ Available | Vault |
 | Team Ender Chest | ✅ Available | None |
 | Team Chat | ✅ Available | None |
+| Admin Chat Spy | ✅ Available | justteams.chatspy |
 | Team PvP Toggle | ✅ Available | None |
 | Join Requests | ✅ Available | None |
 | Team Blacklist | ✅ Available | None |
 | Admin GUI | ✅ Available | justteams.command.admin |
 | Permission Editor | ✅ Available | Admin GUI |
 | Role System | ✅ Available | None |
+| Team Tags (Optional) | ✅ Configurable | team_tag: true |
+| GUI Dummy Items | ✅ Available | None |
 | Economy Integration | ✅ Available | Vault |
 | PlaceholderAPI | ✅ Available | PlaceholderAPI |
 | PvPManager Hook | ✅ Available | PvPManager |
@@ -1673,65 +1775,21 @@ If you encounter issues not covered here:
 | MiniMessage Formatting | ✅ Available | None |
 | Database Connection Pooling | ✅ Available | None |
 | Async Operations | ✅ Available | None |
-
----
-
 ## Changelog
 
-### Version 2.3.3 (Current)
-
-**Major Features:**
-- ✨ **Complete Admin GUI System**: Full-featured admin panel with team management
-  - Team list browser (paginated, 45 teams per page)
-  - Team management panel (edit all settings, view stats)
-  - Member permission editor (toggle permissions, promote/demote, kick)
-  - Direct ender chest access for any team
-- 🚀 **Cross-Server Synchronization**: Dual-mode sync (Redis + MySQL)
-  - Redis: <100ms latency for instant updates
-  - MySQL: 1-second polling fallback
-  - All admin actions sync across network
-  - Real-time GUI updates on all servers
-- ⚡ **Performance Optimizations**:
-  - HikariCP connection pooling
-  - Async database operations
-  - Optimized query caching
-  - Single-server mode for standalone setups
-
-**Admin GUI Features:**
-- Edit team description, name, tag
-- Toggle public/private status
-- Toggle team PvP mode
-- Edit team bank balance
-- Edit team stats (kills, deaths, K/D)
-- View team ender chest
-- Disband teams with confirmation
-- Paginated member list (21 per page)
-- Edit member permissions (withdraw, ender chest, home)
-- Promote/demote members
-- Kick members
-
-**Cross-Server Features:**
-- 14 cross-server update types
-- Redis Pub/Sub for instant sync
-- MySQL polling fallback (1-second)
-- Owner protection (cannot edit owner via GUI)
-- Automatic GUI refresh on updates
-- Player notifications across servers
+### Version 2.3.6 (Current)
 
 **Bug Fixes:**
-- Fixed team chat capturing all messages (empty character bug)
-- Fixed database sync order (database-first pattern)
-- Fixed stale data issues in TeamUpdateSubscriber
-- Fixed GUI not closing on remote kick
-- Fixed member permission updates not syncing
-
----
+- Fixed team creation validation when team_tag feature is disabled
+- Fixed setTeamTag() method to check if feature is enabled before execution
+- Ensured empty tags are properly handled when tag feature is disabled
+- Improved feature toggle consistency across all tag-related operations
 
 ## License & Credits
 
 **JustTeams** is developed and maintained with care by **kotori**.
 
-This plugin is open-source software, licensed under the CC BY-NC-SA 4.0 License
+This plugin is open-source software, licensed under the CC BY-NC-SA 4.0 License.
 
 ---
 
